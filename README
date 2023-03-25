@@ -1,0 +1,14 @@
+Selvfølgelig! Her er dokumentationen på dansk:
+Dokumentation
+
+For at teste webhook-systemet skal du følge disse trin:
+
+    Start webhook-udbyderen: I terminalen skal du navigere til provider-mappen og køre node webhookProvider.js. Dette starter webhook-udbyderens server på http://localhost:3000.
+
+    Start webhook-modtageren (integratoren): I en anden terminal skal du navigere til integrator-mappen og køre node webhookServer.js. Dette starter integratorens webhook-server på http://localhost:3001.
+
+    Registrer et webhook: I en anden terminal skal du navigere til integrator-mappen og køre node registerWebhook.js. Dette script registrerer en webhook hos webhook-udbyderen for hotel_booking-begivenheden.
+
+    Udløs en begivenhed: For at teste webhook'en kan du bruge et værktøj som curl eller Postman til at sende en POST-anmodning til http://localhost:3000/trigger/hotel_booking. Webhook-udbyderen sender en anmodning til den registrerede webhook-URL (integratorens webhook-server), og du bør se begivenhedsdata i integratorens webhook-serverterminal.
+
+    Fjern registreringen af et webhook: I terminalen skal du navigere til integrator-mappen og køre node unregisterWebhook.js. Dette script fjerner registreringen af webhook'en for hotel_booking-begivenheden fra webhook-udbyderen.
