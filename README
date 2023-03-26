@@ -1,14 +1,10 @@
-Selvfølgelig! Her er dokumentationen på dansk:
-Dokumentation
+Dokumentation til Integrator:
 
-For at teste webhook-systemet skal du følge disse trin:
+    Registrer din endpoint:
+    For at få besked om begivenheder, skal du først registrere dit endpoint. Send en POST-anmodning til /webhooks endpointet med begivenhedstypen og URL'en til din endpoint. Gør dette for hver begivenhedstype, du vil modtage.
 
-    Start webhook-udbyderen: I terminalen skal du navigere til provider-mappen og køre node webhookProvider.js. Dette starter webhook-udbyderens server på http://localhost:3000.
+    Afinstaller endpoint:
+    Hvis du ikke længere ønsker at modtage events, skal du afinstallere din endpoint. Send en DELETE-anmodning til /webhooks endpointet med begivenhedstypen og URL'en til din endpoint.
 
-    Start webhook-modtageren (integratoren): I en anden terminal skal du navigere til integrator-mappen og køre node webhookServer.js. Dette starter integratorens webhook-server på http://localhost:3001.
-
-    Registrer et webhook: I en anden terminal skal du navigere til integrator-mappen og køre node registerWebhook.js. Dette script registrerer en webhook hos webhook-udbyderen for hotel_booking-begivenheden.
-
-    Udløs en begivenhed: For at teste webhook'en kan du bruge et værktøj som curl eller Postman til at sende en POST-anmodning til http://localhost:3000/trigger/hotel_booking. Webhook-udbyderen sender en anmodning til den registrerede webhook-URL (integratorens webhook-server), og du bør se begivenhedsdata i integratorens webhook-serverterminal.
-
-    Fjern registreringen af et webhook: I terminalen skal du navigere til integrator-mappen og køre node unregisterWebhook.js. Dette script fjerner registreringen af webhook'en for hotel_booking-begivenheden fra webhook-udbyderen.
+    Modtag webhook-begivenheder:
+    For at håndtere indkommende webhook-begivenheder skal du oprette en server med en defineret endpoint. Når din endpoint er registreret, vil du begynde at modtage begivenheder fra exposee.

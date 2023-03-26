@@ -1,56 +1,76 @@
 const express = require("express");
 const fs = require("fs");
+const axios = require("axios");
 const app = express();
-const port = 3000;
-
 app.use(express.json());
 
-app.post("/register", (req, res) => {
-  const eventType = req.body.event_type;
-  const url = req.body.url;
-  const webhookEntry = { event_type: eventType, url };
+const webhooksFile = "webhooks.json";
 
-  fs.appendFileSync("webhooks.txt", JSON.stringify(webhookEntry) + "\n");
-  res.status(201).send("Webhook registered");
+function readWebhooks() {
+  if (!fs.existsSync(webhooksFile)) {
+    return {};
+  }
+  const data = fs.readFileSync(webhooksFile, "utf-8");
+  return JSON.parse(data);
+}
+
+function writeWebhooks(webhooks) {
+  fs.writeFileSync(webhooksFile, JSON.stringify(webhooks));
+}
+
+function initWebhooks() {
+  if (!fs.existsSync(webhooksFile)) {
+    writeWebhooks({});
+  }
+}
+
+app.post("/webhooks", (req, res) => {
+  const eventType = req.query.event;
+  const endpoint = req.query.endpoint;
+
+  const webhooks = readWebhooks();
+  if (!webhooks[eventType]) {
+    webhooks[eventType] = [];
+  }
+  webhooks[eventType].push(endpoint);
+  writeWebhooks(webhooks);
+
+  axios.post(endpoint, { event: "ping" });
+  res.status(201).json({ success: true });
 });
 
-app.post("/unregister", (req, res) => {
-  const eventType = req.body.event_type;
-  const url = req.body.url;
-  let webhooks = fs
-    .readFileSync("webhooks.txt", "utf-8")
-    .split("\n")
-    .filter(Boolean);
-  webhooks = webhooks
-    .map(JSON.parse)
-    .filter(
-      (webhook) => webhook.event_type !== eventType || webhook.url !== url
-    );
-  fs.writeFileSync(
-    "webhooks.txt",
-    webhooks.map(JSON.stringify).join("\n") + "\n"
-  );
-  res.status(200).send("Webhook unregistered");
+app.delete("/webhooks", (req, res) => {
+  const eventType = req.query.event;
+  const endpoint = req.query.endpoint;
+
+  const webhooks = readWebhooks();
+  if (webhooks[eventType] && webhooks[eventType].includes(endpoint)) {
+    webhooks[eventType] = webhooks[eventType].filter((e) => e !== endpoint);
+    writeWebhooks(webhooks);
+    res.status(200).json({ success: true });
+  } else {
+    res.status(400).json({ success: false, message: "Invalid request" });
+  }
 });
 
-app.post("/trigger/:event_type", (req, res) => {
-  const eventType = req.params.event_type;
-  const webhooks = fs
-    .readFileSync("webhooks.txt", "utf-8")
-    .split("\n")
-    .filter(Boolean)
-    .map(JSON.parse);
-  const relevantWebhooks = webhooks.filter(
-    (webhook) => webhook.event_type === eventType
-  );
+function triggerEvent(eventType, payload) {
+  const webhooks = readWebhooks();
+  if (webhooks[eventType]) {
+    webhooks[eventType].forEach((endpoint) => {
+      axios.post(endpoint, payload);
+    });
+  }
+}
 
-  relevantWebhooks.forEach((webhook) => {
-    // Send the request to the webhook URL (use your favorite HTTP request library, e.g., axios or node-fetch)
-  });
+function randomTrigger() {
+  setInterval(() => {
+    const event =
+      Math.random() < 0.5 ? "hotel_booking" : "booking_cancellation";
+    const payload = { event, data: "Dummy data" };
+    triggerEvent(event, payload);
+  }, Math.random() * 20000 + 10000);
+}
 
-  res.status(200).send("Event triggered");
-});
-
-app.listen(port, () => {
-  console.log(`Webhook provider listening at http://localhost:${port}`);
-});
+initWebhooks();
+randomTrigger();
+app.listen(3000);
